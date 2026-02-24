@@ -1,5 +1,5 @@
 # micpairselection
-Pair selection code and RIR measurements
+Pair selection code
 
 This repository contains the simulation code used to evaluate microphone-pair selection strategies for efficient Steered Response Power (SRP) localization in reverberant environments. 
 
