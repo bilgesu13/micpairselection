@@ -97,6 +97,102 @@ fig.savefig("accuracy_vs_pairs.png", dpi=300)
 
 plt.show()
 # %%
+### accuracy vs. number of pairs with conventional srp
+
+#### accuracy vs. the number of microphone pairs
+
+## in the paper
+
+# ==========================
+# Load data
+# ==========================
+threshold = 0.25
+pair_counts = [2, 4, 6, 8, 12]
+
+measure1 = [np.load(f'measure1200newsource_realistic6dB_{p}pairs.npy') for p in pair_counts]
+measure2 = [np.load(f'measure2200newsource_realistic6dB_{p}pairs.npy') for p in pair_counts]
+broadside = [np.load(f'broadside200newsource_realistic6dB_{p}pairs.npy') for p in pair_counts]
+random = [np.load(f'random200newsource_realistic6db_{p}pairs.npy') for p in pair_counts]
+
+# Conventional SRP using all microphone pairs
+conventional = np.load('conv6dB.npy')
+conv_acc = 100.0 * np.sum(conventional <= threshold) / len(conventional)
+
+methods = {
+    'Norm-based': measure1,
+    'Kurtosis-based': measure2,
+    'Zero-lag CC-based': broadside,
+    'Random': random
+}
+
+colors = {
+    'Norm-based': 'tab:blue',
+    'Kurtosis-based': 'tab:orange',
+    'Zero-lag CC-based': 'tab:green',
+    'Random': 'tab:red'
+}
+
+# ==========================
+# Plot accuracy curves
+# ==========================
+fig, ax = plt.subplots()
+
+for label, data_list in methods.items():
+    accuracies = []
+
+    for data in data_list:
+        if np.isscalar(data):
+            acc = 100.0 if data <= threshold else 0.0
+        else:
+            acc = 100.0 * np.sum(data <= threshold) / len(data)
+
+        accuracies.append(acc)
+
+    ax.plot(
+        pair_counts,
+        accuracies,
+        marker='o',
+        markersize=9,
+        label=label,
+        color=colors[label]
+    )
+
+# Conventional SRP reference line
+ax.axhline(
+    y=conv_acc,
+    color='tab:purple',
+    linestyle='--',
+    linewidth=2,
+    label='Conventional SRP'
+)
+
+# Labels and axes
+ax.set_xlabel("# of Microphone Pairs")
+ax.set_ylabel("Localization Accuracy (%)")
+
+# Reviewer request: rescale y-axis to remove empty zero region
+ax.set_ylim(20, 105)
+
+ax.set_xticks(pair_counts)
+
+# No grid (clean look)
+ax.grid(False)
+
+# Legend
+ax.legend()
+
+fig.tight_layout()
+
+# Save if needed:
+fig.savefig("accuracy_vs_pairs_with_conventional.png", dpi=300)
+# fig.savefig("accuracy_vs_pairs.pdf", bbox_inches="tight")
+
+plt.show()
+
+
+
+
+#%%
 
 ### box plot of errors for different pair counts
 
@@ -162,6 +258,110 @@ fig.savefig("november_boxplots_micpairs.png", dpi=300, bbox_inches="tight")
 # fig.savefig("november_boxplots.pdf", bbox_inches="tight")
 
 plt.show()
+
+#%%
+
+### box plot of errors for different pair counts with conventional SRP reference
+
+### box plot of errors for different pair counts
+
+# ==============================
+# Load data
+# ==============================
+pair_counts = [2, 4, 6, 8, 12]
+
+measure1 = [np.load(f'measure1200newsource_realistic6dB_{p}pairs.npy') for p in pair_counts]
+measure2 = [np.load(f'measure2200newsource_realistic6dB_{p}pairs.npy') for p in pair_counts]
+broadside = [np.load(f'broadside200newsource_realistic6dB_{p}pairs.npy') for p in pair_counts]
+random = [np.load(f'random200newsource_realistic6dB_{p}pairs.npy') for p in pair_counts]
+
+# Conventional SRP
+conventional = np.load('conv6dB.npy')
+conv_median = np.median(conventional)
+
+all_data = [measure1, measure2, broadside, random]
+methods = ['Norm-based', 'Kurtosis-based', 'Zero-lag CC-based', 'Random']
+colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
+
+# ==============================
+# Plot grouped boxplots
+# ==============================
+positions = np.arange(len(pair_counts))
+width = 0.18
+
+fig, ax = plt.subplots()
+
+for i, method_data in enumerate(all_data):
+    box_positions = positions + (i - 1.5) * width
+
+    bp = ax.boxplot(
+        method_data,
+        positions=box_positions,
+        widths=0.16,
+        patch_artist=True,
+        showfliers=False,
+        medianprops=dict(color='black', linewidth=2),
+        boxprops=dict(linewidth=1.3),
+        whiskerprops=dict(linewidth=1.2),
+        capprops=dict(linewidth=1.2)
+    )
+
+    for patch in bp['boxes']:
+        patch.set_facecolor(colors[i])
+        patch.set_alpha(0.45)
+
+# ==============================
+# Conventional SRP reference
+# ==============================
+ax.axhline(
+    y=conv_median,
+    color='tab:purple',
+    linestyle='--',
+    linewidth=2
+)
+
+# Labels
+ax.set_xticks(positions)
+ax.set_xticklabels(pair_counts)
+ax.set_xlabel("# of Microphone Pairs")
+ax.set_ylabel("Localization Error (m)")
+
+ax.grid(False)
+
+# ==============================
+# Legend
+# ==============================
+handles = [
+    plt.Rectangle((0, 0), 1, 1, color=colors[i], alpha=0.45)
+    for i in range(4)
+]
+
+handles.append(
+    plt.Line2D(
+        [0], [0],
+        color='tab:purple',
+        linestyle='--',
+        linewidth=2
+    )
+)
+
+labels = methods + ['Conventional SRP']
+
+ax.legend(handles, labels)
+
+fig.tight_layout()
+
+# Save for LaTeX
+fig.savefig("november_boxplots_micpairs_with_conventional.png",
+            dpi=300,
+            bbox_inches="tight")
+
+# fig.savefig("november_boxplots.pdf",
+#             bbox_inches="tight")
+
+plt.show()
+
+
 
 # %%
 ### in the paper
@@ -496,7 +696,6 @@ plt.show()
 
 ### larger for the paper 
 
-
 ### homula
 
 # ==============================
@@ -568,6 +767,74 @@ fig.savefig("homula_median_errors.png", bbox_inches="tight")      # PNG, 300 dpi
 
 plt.show()
 
+#%%
+# ==============================
+# Plot median error vs SNR (Homula)
+# ==============================
+
+snrs = [0, 6, 12]
+snr_labels = ["0 dB", "6 dB", "12 dB"]
+
+methods = ["conventional", "sparsity1", "sparsity2", "broadside", "random"]
+method_labels = [
+    "Conventional",
+    "Norm-based",
+    "Kurtosis-based",
+    "Zero-lag CC-based",
+    "Random"
+]
+
+colors = {
+    'Conventional': 'tab:purple',
+    'Norm-based': 'tab:blue',
+    'Kurtosis-based': 'tab:orange',
+    'Zero-lag CC-based': 'tab:green',
+    'Random': 'tab:red'
+}
+
+# Load errors
+errors = {m: {s: load_err(m, s) for s in snrs} for m in methods}
+
+# Median localization error for each method and SNR
+medians = {
+    m: [np.median(errors[m][s]) for s in snrs]
+    for m in methods
+}
+
+print("Medians:")
+for m, label in zip(methods, method_labels):
+    print(f"{label}: {medians[m]}")
+
+# ==============================
+# Plot
+# ==============================
+
+fig, ax = plt.subplots()
+
+for m, label in zip(methods, method_labels):
+    ax.plot(
+        snrs,
+        medians[m],
+        marker="o",
+        linewidth=1.8,
+        markersize=5,
+        label=label,
+        color=colors[label]
+    )
+
+ax.set_xlabel("SNR (dB)")
+ax.set_ylabel("Median Localization Error (m)")
+ax.set_xticks(snrs)
+ax.legend()
+ax.grid(True, linestyle="--", alpha=0.3)
+
+fig.tight_layout()
+fig.savefig("homula_median_errors_2.png", dpi=300, bbox_inches="tight")
+# fig.savefig("homula_median_errors.pdf", bbox_inches="tight")
+
+plt.show()
+
+
 
 # %%
 
@@ -587,6 +854,7 @@ def load_err(method, snr):
 methods = ["conventional", "sparsity1", "sparsity2", "broadside", "random"]
 method_labels = ["Conventional", "Norm-based", "Kurtosis-based",
                  "Zero-lag CC-based", "Random"]
+
 
 snrs = [0, 6, 12]
 
@@ -642,3 +910,83 @@ fig.savefig("televic_median_errors.png", dpi=400, bbox_inches="tight")
 
 plt.show()
 # %%
+### Median Error vs SNR (TELEVIC)
+
+# ==============================
+# Load all TELEVIC FINAL errors
+# ==============================
+
+def load_err(method, snr):
+    fname = f"loc_errors_FINAL__televic_{method}_{snr}dB.npy"
+    return np.load(fname)
+
+methods = ["conventional", "sparsity1", "sparsity2", "broadside", "random"]
+method_labels = [
+    "Conventional",
+    "Norm-based",
+    "Kurtosis-based",
+    "Zero-lag CC-based",
+    "Random"
+]
+colors = {
+    'Conventional': 'tab:purple',
+    'Norm-based': 'tab:blue',
+    'Kurtosis-based': 'tab:orange',
+    'Zero-lag CC-based': 'tab:green',
+    'Random': 'tab:red'
+}
+
+snrs = [0, 6, 12]
+
+# Load all error matrices
+errors = {m: {s: load_err(m, s) for s in snrs} for m in methods}
+
+# ==============================
+# Compute medians
+# ==============================
+
+medians = {
+    m: [np.median(errors[m][s]) for s in snrs]
+    for m in methods
+}
+
+print("Medians:")
+for m, label in zip(methods, method_labels):
+    print(f"{label}: {medians[m]}")
+
+# ==============================
+# Plot
+# ==============================
+
+fig, ax = plt.subplots()
+
+for m, label in zip(methods, method_labels):
+    ax.plot(
+        snrs,
+        medians[m],
+        marker="o",
+        linewidth=1.8,
+        markersize=5,
+        label=label,
+        color=colors[label]
+    )
+
+ax.set_xlabel("SNR (dB)")
+ax.set_ylabel("Median Localization Error (m)")
+ax.set_xticks(snrs)
+
+ax.legend()
+ax.grid(True, linestyle="--", alpha=0.3)
+
+fig.tight_layout()
+
+# For the paper
+fig.savefig("televic_median_errors_2.png", dpi=400, bbox_inches="tight")
+# fig.savefig("televic_median_errors.pdf", bbox_inches="tight")
+
+plt.show()
+
+
+
+
+
