@@ -826,7 +826,7 @@ ax.set_xlabel("SNR (dB)")
 ax.set_ylabel("Median Localization Error (m)")
 ax.set_xticks(snrs)
 ax.legend()
-ax.grid(True, linestyle="--", alpha=0.3)
+ax.grid(False)
 
 fig.tight_layout()
 fig.savefig("homula_median_errors_2.png", dpi=300, bbox_inches="tight")
@@ -976,7 +976,7 @@ ax.set_ylabel("Median Localization Error (m)")
 ax.set_xticks(snrs)
 
 ax.legend()
-ax.grid(True, linestyle="--", alpha=0.3)
+ax.grid(False)
 
 fig.tight_layout()
 
@@ -985,8 +985,4 @@ fig.savefig("televic_median_errors_2.png", dpi=400, bbox_inches="tight")
 # fig.savefig("televic_median_errors.pdf", bbox_inches="tight")
 
 plt.show()
-
-
-
-
 
